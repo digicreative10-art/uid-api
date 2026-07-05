@@ -33,25 +33,14 @@ def check_uid(uid: str):
         response = requests.post(url, headers=headers, json=json_data)
         data = response.json()
         
-        # ডাটা থেকে নামটা বের করার লজিক 
-        username = data.get('name') or data.get('nickname') or data.get('player_name')
-        
-        # যদি ডাটা নেস্টেড (nested) অবস্থায় থাকে
-        if not username and 'data' in data and isinstance(data['data'], dict):
-            username = data['data'].get('name') or data['data'].get('nickname')
-            
-        # যদি কোনোভাবেই নাম না পাওয়া যায়
-        if not username:
-            username = "Not Found"
-
-        # ঠিক তুমি যেভাবে চেয়েছো সেভাবে রিটার্ন করা হচ্ছে
+        # সাময়িকভাবে আমরা পুরো ডাটাটা প্রিন্ট করছি দেখার জন্য
         return {
             "uid": uid,
-            "username": username
+            "raw_data": data
         }
         
-    except Exception:
+    except Exception as e:
         return {
             "uid": uid,
-            "username": "Error"
+            "error": str(e)
         }
