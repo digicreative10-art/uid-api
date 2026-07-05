@@ -33,14 +33,20 @@ def check_uid(uid: str):
         response = requests.post(url, headers=headers, json=json_data)
         data = response.json()
         
-        # সাময়িকভাবে আমরা পুরো ডাটাটা প্রিন্ট করছি দেখার জন্য
+        # তোমার দেওয়া JSON রেসপন্স অনুযায়ী পারফেক্ট লজিক
+        if data.get("error") is False and "data" in data and "username" in data["data"]:
+            username = data["data"]["username"]
+        else:
+            username = "Not Found"
+
+        # ঠিক তুমি যেভাবে চেয়েছো সেভাবে রিটার্ন করা হচ্ছে
         return {
             "uid": uid,
-            "raw_data": data
+            "username": username
         }
         
-    except Exception as e:
+    except Exception:
         return {
             "uid": uid,
-            "error": str(e)
+            "username": "Error"
         }
