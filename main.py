@@ -1,26 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 import requests
 
 app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {
-        "status": "success", 
-        "message": "UID to Name API is Live!"
-    }
+    return {"message": "API is Running!"}
 
-# তোমার Vercel API লিংক GET মেথডেই কাজ করবে
 @app.get("/check-uid/{uid}")
 def check_uid(uid: str):
-    if len(uid) < 5:
-        raise HTTPException(status_code=400, detail="Invalid UID format")
-    
     try:
-        # mbtopupbazar-এর API URL
         url = 'https://apis.mbtopupbazar.com/api/game-id-checker'
         
-        # তোমার বের করা হেডার্স
         headers = {
             'accept': 'application/json',
             'accept-language': 'en-US,en;q=0.9,bn;q=0.8',
@@ -37,28 +28,30 @@ def check_uid(uid: str):
             'user-agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36',
         }
 
-        # এখানে 'playerid' এর জায়গায় তোমার লিংকের {uid} টা ডায়নামিক করে দিলাম
-        json_data = {
-            'playerid': uid,
-        }
+        json_data = {'playerid': uid}
 
-        # mbtopupbazar-এ POST রিকোয়েস্ট পাঠানো হচ্ছে
         response = requests.post(url, headers=headers, json=json_data)
-        
-        # রেসপন্স ডাটা JSON ফরম্যাটে বের করা
         data = response.json()
         
-        # যেহেতু আমরা জানি না mbtopupbazar তাদের JSON-এ নামের ফিল্ডটার কী নাম দিয়েছে (যেমন- name, nickname নাকি account_name), 
-        # তাই পুরো ডাটাটাই 'provider_response' এর ভেতর রিটার্ন করে দিচ্ছি। 
+        # ডাটা থেকে নামটা বের করার লজিক 
+        username = data.get('name') or data.get('nickname') or data.get('player_name')
+        
+        # যদি ডাটা নেস্টেড (nested) অবস্থায় থাকে
+        if not username and 'data' in data and isinstance(data['data'], dict):
+            username = data['data'].get('name') or data['data'].get('nickname')
+            
+        # যদি কোনোভাবেই নাম না পাওয়া যায়
+        if not username:
+            username = "Not Found"
+
+        # ঠিক তুমি যেভাবে চেয়েছো সেভাবে রিটার্ন করা হচ্ছে
         return {
-            "status": 200,
             "uid": uid,
-            "provider_response": data
+            "username": username
         }
         
-    except Exception as e:
+    except Exception:
         return {
-            "status": 500,
-            "error": "Failed to fetch name from target server",
-            "details": str(e)
+            "uid": uid,
+            "username": "Error"
         }
