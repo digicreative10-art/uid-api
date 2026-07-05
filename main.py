@@ -1,30 +1,14 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 import requests
 
 app = FastAPI()
 
-# তোমার ভ্যালিড API Key গুলোর লিস্ট (তুমি চাইলে এখানে ক্লায়েন্টদের নাম বা প্যাকেজ অনুযায়ী Key বসাতে পারো)
-VALID_API_KEYS = {
-    "NEXA_KEY_2026": "Team Nexa Admin",
-    "SKETVIA_PREMIUM": "Developer Sketvia Client",
-    "NANO_TEST_KEY": "Team Nano Trial"
-}
-
 @app.get("/")
 def read_root():
-    return {"message": "API is Running Secured!"}
+    return {"message": "API is Running!"}
 
-# URL এর শেষে ?key=API_KEY দিতে হবে
 @app.get("/check-uid/{uid}")
-def check_uid(uid: str, key: str = Query(None)):
-    
-    # API Key চেক করার লজিক
-    if not key or key not in VALID_API_KEYS:
-        return {
-            "error": True,
-            "message": "Invalid or missing API Key. Access Denied."
-        }
-        
+def check_uid(uid: str):
     try:
         url = 'https://apis.mbtopupbazar.com/api/game-id-checker'
         
@@ -49,15 +33,16 @@ def check_uid(uid: str, key: str = Query(None)):
         response = requests.post(url, headers=headers, json=json_data)
         data = response.json()
         
+        # তোমার দেওয়া JSON রেসপন্স অনুযায়ী পারফেক্ট লজিক
         if data.get("error") is False and "data" in data and "username" in data["data"]:
             username = data["data"]["username"]
         else:
             username = "Not Found"
 
+        # ঠিক তুমি যেভাবে চেয়েছো সেভাবে রিটার্ন করা হচ্ছে
         return {
             "uid": uid,
-            "username": username,
-            "authorized_by": VALID_API_KEYS[key] # কোন ক্লায়েন্ট/প্যাকেজ ব্যবহার করছে সেটা দেখাবে
+            "username": username
         }
         
     except Exception:
